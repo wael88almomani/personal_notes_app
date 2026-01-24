@@ -120,13 +120,5 @@ flutter build apk --release
 - intl (date formatting)
 - flutter_launcher_icons (dev) for app icon generation
 
----
 
-## Contribution & Learning
 
-This project is structured for learning and demonstration. Feel free to extend it with:
-- State management (e.g., Provider, Riverpod, or Bloc).
-- Theming/dark mode.
-- Search, filtering, and tagging for notes.
-- Cloud sync (Firebase, Supabase) if you want multi-device support.
-├── screens/
