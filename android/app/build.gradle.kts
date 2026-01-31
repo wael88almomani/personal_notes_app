@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.personal_notes_app"
+    namespace = "com.waelalmomani.personalnotes"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -20,11 +20,11 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.personalnotes"
+        applicationId = "com.waelalmomani.personalnotes"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 5
+        versionName = "1.2.0"
     }
 
     buildTypes {

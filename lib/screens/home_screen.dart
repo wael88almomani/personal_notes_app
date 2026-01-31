@@ -275,6 +275,7 @@ class _HomeScreenState extends State<HomeScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
+<<<<<<< HEAD
               GestureDetector(
                 onTap: _animateLogo,
                 child: AnimatedBuilder(
@@ -316,11 +317,44 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     );
                   },
+=======
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Theme.of(context).colorScheme.primary,
+                      Theme.of(context).colorScheme.secondary,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withAlpha(77),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.auto_awesome,
+                  color: Colors.white,
+                  size: 24,
+>>>>>>> 3cf6098 (Project initial commit + privacy policy)
                 ),
               ),
               const SizedBox(width: 12),
               Text(
+<<<<<<< HEAD
                 'Personal Notes',
+=======
+                'Personal Note',
+>>>>>>> 3cf6098 (Project initial commit + privacy policy)
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -331,6 +365,7 @@ class _HomeScreenState extends State<HomeScreen>
           elevation: 0,
           backgroundColor: Colors.transparent,
           foregroundColor: Theme.of(context).colorScheme.onSurface,
+<<<<<<< HEAD
           actions: [
             Padding(
               padding: const EdgeInsets.only(right: 8),
@@ -363,6 +398,9 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ),
           ],
+=======
+          actions: [],
+>>>>>>> 3cf6098 (Project initial commit + privacy policy)
         ),
         body: _buildBody(),
         floatingActionButton: FloatingActionButton.extended(
@@ -377,7 +415,58 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildBody() {
     if (_loading) {
+<<<<<<< HEAD
       return const Center(child: CircularProgressIndicator());
+=======
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Theme.of(context).colorScheme.primary,
+                    Theme.of(context).colorScheme.secondary,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(context).colorScheme.primary.withAlpha(77),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.auto_awesome,
+                color: Colors.white,
+                size: 40,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Welcome to Personal Note',
+              style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Start capturing your thoughts and ideas!',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+>>>>>>> 3cf6098 (Project initial commit + privacy policy)
     }
     if (_error != null) {
       return Center(

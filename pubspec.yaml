@@ -1,7 +1,7 @@
 name: personal_notes_app
 description: "Personal Notes - A local-first notes app with SQLite."
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.2.0+5
 
 environment:
   sdk: ^3.10.7
@@ -13,6 +13,8 @@ dependencies:
   path: ^1.9.0
   path_provider: ^2.1.2
   intl: ^0.19.0
+  share_plus: ^10.1.4
+  google_fonts: ^6.3.3
 
 dev_dependencies:
   flutter_test:
