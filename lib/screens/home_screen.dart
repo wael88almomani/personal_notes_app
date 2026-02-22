@@ -15,174 +15,37 @@ class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   final DatabaseHelper _db = DatabaseHelper();
   List<Note> _notes = [];
+  List<Note> _filteredNotes = [];
   bool _loading = true;
   String? _error;
-  late AnimationController _logoController;
-  late Animation<double> _logoRotation;
-  late Animation<double> _logoScale;
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _logoController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-    _logoRotation = Tween<double>(begin: 0, end: 0.5).animate(
-      CurvedAnimation(parent: _logoController, curve: Curves.easeInOut),
-    );
-    _logoScale = Tween<double>(begin: 1.0, end: 1.1).animate(
-      CurvedAnimation(parent: _logoController, curve: Curves.easeInOut),
-    );
     _loadNotes();
+    _searchController.addListener(_onSearchChanged);
   }
 
   @override
   void dispose() {
-    _logoController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
-  void _animateLogo() {
-    if (_logoController.status == AnimationStatus.completed) {
-      _logoController.reverse();
-    } else {
-      _logoController.forward();
-    }
-  }
-
-  void _showAboutDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Theme.of(context).colorScheme.primary,
-                    Theme.of(context).colorScheme.secondary,
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.auto_awesome,
-                color: Colors.white,
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: 16),
-            const Expanded(
-              child: Text(
-                'حول التطبيق',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Divider(),
-            const SizedBox(height: 12),
-            _buildInfoRow(
-              Icons.app_settings_alt,
-              'اسم التطبيق',
-              'Personal Notes',
-            ),
-            const SizedBox(height: 12),
-            _buildInfoRow(Icons.info_outline, 'الإصدار', '1.0.0+1'),
-            const SizedBox(height: 12),
-            _buildInfoRow(
-              Icons.description_outlined,
-              'الوصف',
-              'تطبيق ملاحظات شخصية محلي',
-            ),
-            const SizedBox(height: 12),
-            _buildInfoRow(Icons.calendar_today, 'تاريخ الإصدار', '2026'),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.check_circle,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'جميع البيانات محفوظة محلياً',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text('حسناً'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+  void _onSearchChanged() {
+    final query = _searchController.text.trim().toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        _filteredNotes = _notes;
+      } else {
+        _filteredNotes = _notes.where((note) {
+          return note.title.toLowerCase().contains(query) ||
+              note.content.toLowerCase().contains(query);
+        }).toList();
+      }
+    });
   }
 
   Future<void> _loadNotes() async {
@@ -195,6 +58,7 @@ class _HomeScreenState extends State<HomeScreen>
       if (mounted) {
         setState(() {
           _notes = list;
+          _filteredNotes = list;
           _loading = false;
         });
       }
@@ -258,6 +122,19 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
+  Future<void> _togglePin(Note note) async {
+    try {
+      await _db.togglePinNote(note.id, !note.isPinned);
+      if (mounted) _loadNotes();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to toggle pin: $e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -271,136 +148,75 @@ class _HomeScreenState extends State<HomeScreen>
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-<<<<<<< HEAD
-              GestureDetector(
-                onTap: _animateLogo,
-                child: AnimatedBuilder(
-                  animation: _logoController,
-                  builder: (context, child) {
-                    return Transform.scale(
-                      scale: _logoScale.value,
-                      child: Transform.rotate(
-                        angle: _logoRotation.value * 3.14159,
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Theme.of(context).colorScheme.primary,
-                                Theme.of(context).colorScheme.secondary,
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.primary.withValues(alpha: 0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            Icons.auto_awesome,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-=======
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.secondary,
-                    ],
+          title: _isSearching
+              ? TextField(
+                  controller: _searchController,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    hintText: 'Search notes...',
+                    border: InputBorder.none,
                   ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withAlpha(77),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
+                  style: Theme.of(context).textTheme.titleMedium,
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Theme.of(context).colorScheme.primary,
+                            Theme.of(context).colorScheme.secondary,
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withAlpha(77),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.auto_awesome,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Personal Note',
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.auto_awesome,
-                  color: Colors.white,
-                  size: 24,
->>>>>>> 3cf6098 (Project initial commit + privacy policy)
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-<<<<<<< HEAD
-                'Personal Notes',
-=======
-                'Personal Note',
->>>>>>> 3cf6098 (Project initial commit + privacy policy)
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
           centerTitle: true,
           elevation: 0,
           backgroundColor: Colors.transparent,
           foregroundColor: Theme.of(context).colorScheme.onSurface,
-<<<<<<< HEAD
           actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: IconButton(
-                onPressed: _showAboutDialog,
-                tooltip: 'حول التطبيق',
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.2),
-                        Theme.of(
-                          context,
-                        ).colorScheme.secondary.withValues(alpha: 0.2),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    Icons.info_outline,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 20,
-                  ),
-                ),
-              ),
+            IconButton(
+              icon: Icon(_isSearching ? Icons.close : Icons.search),
+              onPressed: () {
+                setState(() {
+                  _isSearching = !_isSearching;
+                  if (!_isSearching) {
+                    _searchController.clear();
+                  }
+                });
+              },
+              tooltip: _isSearching ? 'Close search' : 'Search',
             ),
           ],
-=======
-          actions: [],
->>>>>>> 3cf6098 (Project initial commit + privacy policy)
         ),
         body: _buildBody(),
         floatingActionButton: FloatingActionButton.extended(
@@ -415,9 +231,6 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildBody() {
     if (_loading) {
-<<<<<<< HEAD
-      return const Center(child: CircularProgressIndicator());
-=======
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -466,7 +279,6 @@ class _HomeScreenState extends State<HomeScreen>
           ],
         ),
       );
->>>>>>> 3cf6098 (Project initial commit + privacy policy)
     }
     if (_error != null) {
       return Center(
@@ -534,6 +346,35 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       );
     }
+    if (_filteredNotes.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 100,
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.5),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'No notes found',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Try a different search',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
     return RefreshIndicator(
       onRefresh: _loadNotes,
       child: LayoutBuilder(
@@ -548,30 +389,32 @@ class _HomeScreenState extends State<HomeScreen>
                 mainAxisSpacing: 16,
                 childAspectRatio: 1.5,
               ),
-              itemCount: _notes.length,
+              itemCount: _filteredNotes.length,
               itemBuilder: (context, i) => AnimatedOpacity(
                 opacity: 1.0,
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
                 child: NoteCard(
-                  note: _notes[i],
-                  onTap: () => _navigateToEdit(_notes[i]),
-                  onDelete: () => _deleteNote(_notes[i]),
+                  note: _filteredNotes[i],
+                  onTap: () => _navigateToEdit(_filteredNotes[i]),
+                  onDelete: () => _deleteNote(_filteredNotes[i]),
+                  onTogglePin: () => _togglePin(_filteredNotes[i]),
                 ),
               ),
             );
           } else {
             return ListView.builder(
               padding: const EdgeInsets.only(top: 8, bottom: 88),
-              itemCount: _notes.length,
+              itemCount: _filteredNotes.length,
               itemBuilder: (context, i) => AnimatedOpacity(
                 opacity: 1.0,
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
                 child: NoteCard(
-                  note: _notes[i],
-                  onTap: () => _navigateToEdit(_notes[i]),
-                  onDelete: () => _deleteNote(_notes[i]),
+                  note: _filteredNotes[i],
+                  onTap: () => _navigateToEdit(_filteredNotes[i]),
+                  onDelete: () => _deleteNote(_filteredNotes[i]),
+                  onTogglePin: () => _togglePin(_filteredNotes[i]),
                 ),
               ),
             );
