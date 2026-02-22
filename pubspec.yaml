@@ -1,7 +1,7 @@
 name: personal_notes_app
 description: "A local-first Flutter notes application for quickly creating, editing, and organizing personal notes. Built as an academic/portfolio project to demonstrate mobile UI design, state management, and offline persistence with SQLite."
 publish_to: 'none'
-version: 1.2.0+5
+version: 1.2.1+6
 
 environment:
   sdk: ^3.10.7
